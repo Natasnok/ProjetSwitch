@@ -16,10 +16,42 @@ GREEN = (0, 255, 0)
 BLUE = (50, 153, 213)
 FONT_SIZE = 48
 FONT = pygame.font.Font(None, FONT_SIZE)
+FONT_TITRE= pygame.font.Font(None, 100)
 
 # Create the game window
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("SwitchGame")
+
+def main_menu():
+    global nb_switch
+    while True:
+        screen.fill(WHITE)
+        draw_text("Switch Game", FONT_TITRE, BLACK, screen, WIDTH//2 - 220, HEIGHT//2 - 150)
+
+        # Dessiner le bouton "Start"
+        pygame.draw.rect(screen, GREEN, (WIDTH//2 - 100, HEIGHT//2, 200, 50))
+        draw_text("Start", FONT, BLACK, screen, WIDTH//2 - 40, HEIGHT//2 + 10)
+
+        # Dessiner le bouton "Quitter"
+        pygame.draw.rect(screen, RED, (WIDTH//2 - 100, HEIGHT//2 + 100, 200, 50))
+        draw_text("Quitter", FONT, BLACK, screen, WIDTH//2 - 60, HEIGHT//2 + 110)
+
+        pygame.display.update()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                # Vérifier si le bouton "Start" a été cliqué
+                if WIDTH//2 - 100 <= mouse_pos[0] <= WIDTH//2 + 100 and HEIGHT//2 <= mouse_pos[1] <= HEIGHT//2 + 50:
+                    nb_switch = 5
+                    return True
+                # Vérifier si le bouton "Quitter" a été cliqué
+                elif WIDTH//2 - 100 <= mouse_pos[0] <= WIDTH//2 + 100 and HEIGHT//2 + 100 <= mouse_pos[1] <= HEIGHT//2 + 150:
+                    pygame.quit()
+                    sys.exit()
 
 def generate_question():
         num1 = random.randint(1, 20)
@@ -73,7 +105,7 @@ def Calcul_mental():
             # Afficher le score, le nombre de vies et le temps restant
             draw_text(f"Score: {score_switch}", FONT, BLACK, screen, 10, 10)
             draw_text(f"{time_left} s", FONT, BLACK, screen, WIDTH - 420, 10)
-            draw_text(f"Switch: {nb_switch}", FONT, BLACK, screen, WIDTH - 160 , 10)
+            draw_text(f"Switch: {nb_switch}", FONT, BLACK, screen, WIDTH - 170 , 10)
             # Afficher la réponse de l'utilisateur
             draw_text(f"Réponse: {user_answer}", FONT, BLACK, screen, WIDTH//2 - 100, HEIGHT - 100)
 
@@ -97,6 +129,8 @@ def Calcul_mental():
                                 nb_switch += 1
                                 score_calcul=0
                         else:
+                            question=""
+                            answer=""
                             screen.fill(BLACK)
                             pygame.display.flip()
                             return
@@ -206,13 +240,13 @@ def Jeu_Des_Fleches():
         keys = pygame.key.get_pressed()
         new_player_x = player_x
         new_player_y = player_y
-        if keys[pygame.K_LEFT]:
+        if keys[pygame.K_LEFT] or keys[pygame.K_q] or keys[pygame.K_a]:
             new_player_x -= PLAYER_SPEED
-        if keys[pygame.K_RIGHT]:
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             new_player_x += PLAYER_SPEED
-        if keys[pygame.K_UP]:
+        if keys[pygame.K_UP] or keys[pygame.K_z] or keys[pygame.K_w]:
             new_player_y -= PLAYER_SPEED
-        if keys[pygame.K_DOWN]:
+        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
             new_player_y += PLAYER_SPEED
 
         # Vérifier si le nouveau positionnement du joueur est à l'intérieur du cercle
@@ -260,7 +294,7 @@ def Jeu_Des_Fleches():
             score_fleche = 0
 
         draw_text(f"Score: {score_switch}", FONT, BLACK, screen, 10, 10)
-        draw_text(f"Switch: {nb_switch}", FONT, BLACK, screen, WIDTH - 160 , 10)
+        draw_text(f"Switch: {nb_switch}", FONT, BLACK, screen, WIDTH - 170 , 10)
 
         # Mettre à jour l'affichage
         pygame.display.flip()
@@ -276,8 +310,6 @@ def Memory():
     GAP_SIZE = 10
     ROWS = 4
     COLS = 4
-    draw_text(f"Score: {score_switch}", FONT, BLACK, screen, 10, 10)
-    draw_text(f"Switch: {nb_switch}", FONT, BLACK, screen, WIDTH - 160 , 10)
     pygame.display.flip()
 
     # Create numbers for tiles
@@ -294,7 +326,6 @@ def Memory():
             tile_rects.append(pygame.Rect(x, y, TILE_SIZE, TILE_SIZE))
 
     # Game variables
-    turns = 0
     start_time = time.time()
     game_duration = switch_time
 
@@ -303,7 +334,7 @@ def Memory():
     while running:
         screen.fill(WHITE)
         draw_text(f"Score: {score_switch}", FONT, BLACK, screen, 10, 10)
-        draw_text(f"Switch: {nb_switch}", FONT, BLACK, screen, WIDTH - 160, 10)
+        draw_text(f"Switch: {nb_switch}", FONT, BLACK, screen, WIDTH - 170, 10)
         if time.time() - start_time >= game_duration:
             screen.fill(BLACK)
             pygame.display.flip()
@@ -397,29 +428,29 @@ def Snake():
             handle_events()
 
             keys = pygame.key.get_pressed()
-            if keys[pygame.K_LEFT] and x1_change != snake_block:
+            if (keys[pygame.K_LEFT] or keys[pygame.K_q] or keys[pygame.K_a]) and x1_change != snake_block:
                 x1_change = -snake_block
                 y1_change = 0
-            elif keys[pygame.K_RIGHT] and x1_change != -snake_block:
+            elif (keys[pygame.K_RIGHT] or keys[pygame.K_d]) and x1_change != -snake_block:
                 x1_change = snake_block
                 y1_change = 0
-            elif keys[pygame.K_UP] and y1_change != snake_block:
+            elif (keys[pygame.K_UP] or keys[pygame.K_z] or keys[pygame.K_w]) and y1_change != snake_block:
                 y1_change = -snake_block
                 x1_change = 0
-            elif keys[pygame.K_DOWN] and y1_change != -snake_block:
+            elif (keys[pygame.K_DOWN] or keys[pygame.K_s]) and y1_change != -snake_block:
                 y1_change = snake_block
                 x1_change = 0
 
             if x1 >= WIDTH - 60 or x1 < 60 or y1 >= HEIGHT - 60 or y1 < 60:
                 x1 = WIDTH / 2
                 y1 = HEIGHT / 2
-                x1_change = 0
+                x1_change = 10
                 y1_change = 0
                 snake_List = []
                 Length_of_snake = 1
                 score_snake = 0
-                foodx = round(random.randrange(61, WIDTH - 61) / 10.0) * 10.0
-                foody = round(random.randrange(61, HEIGHT - 61) / 10.0) * 10.0
+                foodx = round(random.randrange(70, WIDTH - 70) / 10.0) * 10.0
+                foody = round(random.randrange(70, HEIGHT - 70) / 10.0) * 10.0
                 screen.fill(BLACK)
                 pygame.display.flip()
                 return
@@ -448,8 +479,8 @@ def Snake():
             our_snake(snake_block, snake_List)
 
             if x1 == foodx and y1 == foody:
-                foodx = round(random.randrange(61, WIDTH - 61) / 10.0) * 10.0
-                foody = round(random.randrange(61, HEIGHT - 61) / 10.0) * 10.0
+                foodx = round(random.randrange(70, WIDTH - 70) / 10.0) * 10.0
+                foody = round(random.randrange(70, HEIGHT - 70) / 10.0) * 10.0
                 Length_of_snake += 1
                 score_snake += 1
                 if score_snake == 3:
@@ -458,7 +489,7 @@ def Snake():
                     score_snake = 0
 
             draw_text(f"Score: {score_switch}", FONT, WHITE, screen, 10, 10)
-            draw_text(f"Switch: {nb_switch}", FONT, WHITE, screen, WIDTH - 160 , 10)
+            draw_text(f"Switch: {nb_switch}", FONT, WHITE, screen, WIDTH - 170 , 10)
             pygame.display.update()
 
             clock.tick(snake_speed)
@@ -468,21 +499,21 @@ def Snake():
             game_close = False
             x1 = WIDTH / 2
             y1 = HEIGHT / 2
-            x1_change = 0
+            x1_change = 10
             y1_change = 0
             snake_List = []
             Length_of_snake = 1
             score_snake = 0
-            foodx = round(random.randrange(61, WIDTH - 61) / 10.0) * 10.0
-            foody = round(random.randrange(61, HEIGHT - 61) / 10.0) * 10.0
+            foodx = round(random.randrange(70, WIDTH - 70) / 10.0) * 10.0
+            foody = round(random.randrange(70, HEIGHT - 70) / 10.0) * 10.0
             screen.fill(BLACK)
             pygame.display.flip()
             return
 
 # Liste des jeux
-jeux = [Calcul_mental, Jeu_Des_Fleches, Memory, Snake]
+jeux = [Calcul_mental, Jeu_Des_Fleches, Snake]
 
-global switch_time, nb_switch, start_time, score_switch
+global switch_time, start_time, score_switch
 
 score_switch =0
 current_game = None
@@ -504,12 +535,11 @@ score_snake = 0
 score_calcul = 0
 score_fleche = 0
 score_memory = 0
-foodx = round(random.randrange(61, WIDTH - 61) / 10.0) * 10.0
-foody = round(random.randrange(61, HEIGHT - 61) / 10.0) * 10.0
+foodx = round(random.randrange(70, WIDTH - 70) / 10.0) * 10.0
+foody = round(random.randrange(70, HEIGHT - 70) / 10.0) * 10.0
 question=""
 answer=""
 score_calcul=0
-nb_switch=3
 selected_tiles = []
 matched_tiles = []
 numbers = []
@@ -518,44 +548,67 @@ clock = pygame.time.Clock()
 clock.tick(60)
 
 # Main loop
-while True:
-    # If no game is currently running, select a new game to play
-    if next_game:
-        new_game=random.choice(jeux)
-        while current_game==new_game:
-            new_game=random.choice(jeux)
-        current_game=new_game
-        txt="Next Game: "+ (str(new_game)).split()[1]
-        if "_" in txt:
-            txt=txt.replace("_", " ")
-        message(txt,WHITE)
-        pygame.display.flip()
-        pygame.time.wait(2000)
-        current_game()  # Start the selected game
-        nb_switch -= 1
-        next_game=False
-    # Check if it's time to switch to a new game based on elapsed time
-    if time.time() - start_time >= switch_time:
-        next_game=True  # Reset the current game
-    if nb_switch <= 0:
-        games_over=True
-    while games_over:
-        screen.fill(WHITE)
-        message("Game Over",BLACK)
-        draw_text(f"Score: {score_switch}", FONT, BLACK, screen, WIDTH - 465, HEIGHT - 290)
-        pygame.display.update()
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            if event.type == pygame.KEYDOWN:
-                nb_switch = 0
-                game_over = False
-
-            
-
-    # Handle events
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
+if main_menu():
+    while True:
+        if next_game:
+            new_game = random.choice(jeux)
+            while current_game == new_game:
+                new_game = random.choice(jeux)
+            current_game = new_game
+            next_game = False
+            txt="Next Game: "+ (str(new_game)).split()[1]
+            if "_" in txt:
+                txt=txt.replace("_", " ")
+            screen.fill(BLACK)
+            message(txt,WHITE)
+            pygame.display.flip()
+            pygame.time.wait(2000)
+            current_game()  # Start the selected game
+            nb_switch -= 1
+            next_game=False
+        # Check if it's time to switch to a new game based on elapsed time
+        if time.time() - start_time >= switch_time:
+            next_game=True  # Reset the current game
+        if nb_switch <= 0:
+            games_over=True
+        while games_over:
+            screen.fill(WHITE)
+            draw_text("GAME OVER", FONT_TITRE, BLACK, screen, WIDTH//2 - 210, HEIGHT//2 - 150)
+            draw_text(f"Score: {score_switch}", FONT, BLACK, screen, WIDTH - 460, HEIGHT - 300)
+            draw_text("Press a key to continue", FONT, BLACK, screen, WIDTH - 570, HEIGHT - 200)
+            pygame.display.update()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                    score_switch =0
+                    current_game = None
+                    next_game=True
+                    new_game=None
+                    start_time = 0 # Time in seconds before switching to a new game
+                    switch_time = random.randint(5,15)
+                    arrows = []
+                    player_x = WIDTH // 2
+                    player_y = HEIGHT // 2
+                    arrow_count = 0
+                    x1 = WIDTH / 2
+                    y1 = HEIGHT / 2
+                    x1_change = 10
+                    y1_change = 0
+                    snake_List = []
+                    Length_of_snake = 1
+                    score_snake = 0
+                    score_calcul = 0
+                    score_fleche = 0
+                    score_memory = 0
+                    foodx = round(random.randrange(70, WIDTH - 70) / 10.0) * 10.0
+                    foody = round(random.randrange(70, HEIGHT - 70) / 10.0) * 10.0
+                    question=""
+                    answer=""
+                    score_calcul=0
+                    selected_tiles = []
+                    matched_tiles = []
+                    numbers = []
+                    games_over = False
+                    main_menu()
