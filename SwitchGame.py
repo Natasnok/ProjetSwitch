@@ -84,7 +84,7 @@ def main_menu():
                     pygame.mixer.music.stop()
                     pygame.mixer.music.load('switchgame.mp3')
                     pygame.mixer.music.play(-1)
-                    nb_switch = 5
+                    nb_switch = 1
                     menu_choice = 1
                     return
                 # Vérifier si le bouton "HighScore" a été cliqué ...
@@ -108,16 +108,16 @@ def init_score():
     if not os.path.exists(chemin):
         # Exemple de données à enregistrer dans le fichier CSV
         donnees = [
-        ["None", 0],
-        ["None", 0],
-        ["None", 0],
-        ["None", 0],
-        ["None", 0],
-        ["None", 0],
-        ["None", 0],
-        ["None", 0],
-        ["None", 0],
-        ["None", 0],
+        ["None", -1],
+        ["None", -1],
+        ["None", -1],
+        ["None", -1],
+        ["None", -1],
+        ["None", -1],
+        ["None", -1],
+        ["None", -1],
+        ["None", -1],
+        ["None", -1],
         ]
     
         # Création et écriture dans le fichier CSV
@@ -618,7 +618,7 @@ def Snake():
             return
 
 # Liste des jeux
-jeux = [Calcul_mental, Jeu_Des_Fleches, Snake, Memory]
+jeux = [Calcul_mental, Jeu_Des_Fleches, Snake]
 
 global switch_time, start_time, score_switch
 
@@ -798,8 +798,12 @@ while True:
         draw_text("HighScore", FONT_TITRE, WHITE, screen, WIDTH//2 - 165, HEIGHT//2 - 280)
         # Modification de la ligne spécifiée
         for i, score in enumerate(highscore):
-            draw_text(f"{i+1}: {score[0]} => {int(score[1])}", pygame.font.Font(None, 60), BLACK, screen, WIDTH//2-198 , (102+50*i))
-            draw_text(f"{i+1}: {score[0]} => {int(score[1])}", pygame.font.Font(None, 60), WHITE, screen, WIDTH//2-200 , (100+50*i))
+            if int(score[1])!=-1:
+                draw_text(f"{i+1}: {score[0]} => {int(score[1])}", pygame.font.Font(None, 60), BLACK, screen, WIDTH//2-198 , (102+50*i))
+                draw_text(f"{i+1}: {score[0]} => {int(score[1])}", pygame.font.Font(None, 60), WHITE, screen, WIDTH//2-200 , (100+50*i))
+            else:
+                draw_text(f"{i+1}: No score", pygame.font.Font(None, 60), BLACK, screen, WIDTH//2-198 , (102+50*i))
+                draw_text(f"{i+1}: No score", pygame.font.Font(None, 60), WHITE, screen, WIDTH//2-200 , (100+50*i))
         pygame.display.flip()
         while highscore_window_open:
             for event in pygame.event.get():
