@@ -81,24 +81,28 @@ def main_menu():
                 # Vérifier si le bouton "Start" a été cliqué ...
                 if start_button_rect.collidepoint(mouse_pos):
                     # Code pour le bouton "Start"
+                    button.play()
                     pygame.mixer.music.stop()
                     pygame.mixer.music.load('switchgame.mp3')
                     pygame.mixer.music.play(-1)
-                    nb_switch = 1
+                    nb_switch = 3
                     menu_choice = 1
                     return
                 # Vérifier si le bouton "HighScore" a été cliqué ...
                 elif highscore_button_rect.collidepoint(mouse_pos):
                     # Code pour le bouton "HighScore"
+                    button.play()
                     menu_choice = 2
                     return
                 # Vérifier si le bouton "Quitter" a été cliqué ...
                 elif quit_button_rect.collidepoint(mouse_pos):
+                    button.play()
                     pygame.quit()
                     sys.exit()
                 # Vérifier si le bouton "parametre" a été cliqué
                 elif parametre_rect.collidepoint(mouse_pos):
                     # Traitez ici le clic sur le bouton "parametre"
+                    button.play()
                     menu_choice = 3
                     return
 
@@ -228,14 +232,17 @@ def Calcul_mental():
                 if event.key == pygame.K_RETURN: # Si Enter est pressé
                     if user_answer.lstrip('-').isdigit(): # Vérifier si l'utilisateur a entré un nombre
                         if int(user_answer) == int(answer):
+                            ding.play()
                             score_calcul += 1
                             question=""
                             answer=""
                             if score_calcul == 3:
-                                score_switch += 1
+                                validate.play()
+                                score_switch += 100
                                 nb_switch += 1
                                 score_calcul=0
                         else:
+                            wrong.play()
                             question=""
                             answer=""
                             screen.fill(BLACK)
@@ -335,6 +342,7 @@ def Jeu_Des_Fleches():
 
 
         if game_over:
+            crash.play()
             arrows = []
             player_x = WIDTH // 2
             player_y = HEIGHT // 2
@@ -396,7 +404,8 @@ def Jeu_Des_Fleches():
         # Affichage du score
         score_fleche += 1
         if score_fleche >= 400:
-            score_switch += 1
+            validate.play()
+            score_switch += 100
             nb_switch += 1
             score_fleche = 0
 
@@ -474,11 +483,13 @@ def Memory():
         if len(selected_tiles) == 2:
             index1, index2 = selected_tiles
             if numbers[index1] == numbers[index2]:
+                ding.play()
                 matched_tiles.extend(selected_tiles)
                 score_memory+=1
                 if score_memory==2:
+                    validate.play()
                     nb_switch += 1
-                    score_switch += 1
+                    score_switch += 100
                     score_memory = 0
                 selected_tiles = []
             else:
@@ -487,6 +498,7 @@ def Memory():
 
         # Check for game over
         if len(matched_tiles) == len(numbers):
+            validate.play()
             nb_switch += 1
             selected_tiles = []
             matched_tiles = []
@@ -506,34 +518,31 @@ def message(msg, color):
     text_rect = mesg.get_rect(center=(WIDTH // 2, (HEIGHT // 2)-10))
     screen.blit(mesg, text_rect)
 
-def handle_events():
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
-
 def Snake():
     global Length_of_snake, x1, y1, x1_change, y1_change, snake_List, Length_of_snake, score_snake, foodx, foody, nb_switch, score_switch
     start_time = time.time()
     game_duration = switch_time
-    snake_block = 10
-    snake_speed = 20
-    
+    snake_block = 20  # Augmented the size of the pixels
+    snake_speed = 15
+   
     clock = pygame.time.Clock()
     pygame.display.flip()
-
+ 
     game_over = False
     while not game_over:
         game_close = False
-
+ 
         while not game_close:
             if time.time() - start_time >= game_duration:
                 screen.fill(BLACK)
                 pygame.display.flip()
                 return
-
-            handle_events()
-
+ 
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+ 
             keys = pygame.key.get_pressed()
             if (keys[pygame.K_LEFT] or keys[pygame.K_q] or keys[pygame.K_a]) and x1_change != snake_block:
                 x1_change = -snake_block
@@ -547,30 +556,31 @@ def Snake():
             elif (keys[pygame.K_DOWN] or keys[pygame.K_s]) and y1_change != -snake_block:
                 y1_change = snake_block
                 x1_change = 0
-
+ 
             if x1 >= WIDTH - 60 or x1 < 60 or y1 >= HEIGHT - 60 or y1 < 60:
+                crash.play()
                 x1 = WIDTH / 2
                 y1 = HEIGHT / 2
-                x1_change = 10
+                x1_change = 20
                 y1_change = 0
                 snake_List = []
                 Length_of_snake = 1
                 score_snake = 0
-                foodx = round(random.randrange(70, WIDTH - 70) / 10.0) * 10.0
-                foody = round(random.randrange(70, HEIGHT - 70) / 10.0) * 10.0
+                foodx = round(random.randrange(70, WIDTH - 70) / 20.0) * 20.0
+                foody = round(random.randrange(70, HEIGHT - 70) / 20.0) * 20.0
                 screen.fill(BLACK)
                 pygame.display.flip()
                 return
-
+ 
             x1 += x1_change
             y1 += y1_change
             screen.fill(BLUE)
-
+ 
             pygame.draw.rect(screen, RED, [0, 0, WIDTH, 60])  # top
             pygame.draw.rect(screen, RED, [0, 0, 60, HEIGHT])  # left
             pygame.draw.rect(screen, RED, [WIDTH - 60, 0, 60, HEIGHT])  # right
             pygame.draw.rect(screen, RED, [0, HEIGHT - 60, WIDTH, 60])  # bottom
-
+ 
             pygame.draw.rect(screen, GREEN, [foodx, foody, snake_block, snake_block])
             snake_Head = []
             snake_Head.append(x1)
@@ -578,47 +588,53 @@ def Snake():
             snake_List.append(snake_Head)
             if len(snake_List) > Length_of_snake:
                 del snake_List[0]
-
+ 
             for x in snake_List[:-1]:
                 if x == snake_Head:
                     game_close = True
-
+ 
             our_snake(snake_block, snake_List)
-
-            if x1 == foodx and y1 == foody:
-                foodx = round(random.randrange(70, WIDTH - 70) / 10.0) * 10.0
-                foody = round(random.randrange(70, HEIGHT - 70) / 10.0) * 10.0
+ 
+            if x1 == foodx and y1 == foody or (x1 >= foodx and x1 < foodx + snake_block and y1 >= foody and y1 < foody + snake_block):
+                foodx = round(random.randrange(70, WIDTH - 70) / 20.0) * 20.0
+                foody = round(random.randrange(70, HEIGHT - 70) / 20.0) * 20.0
+                pomme.play()
                 Length_of_snake += 1
                 score_snake += 1
                 if score_snake == 3:
+                    validate.play()
                     nb_switch += 1
-                    score_switch += 1
+                    score_switch += 100
                     score_snake = 0
-
+ 
             draw_text(f"Score: {score_switch}", FONT, WHITE, screen, 10, 10)
             draw_text(f"Switch: {nb_switch}", FONT, WHITE, screen, WIDTH - 170 , 10)
             pygame.display.update()
-
+ 
             clock.tick(snake_speed)
-
+ 
         while game_close:
-            handle_events()
+            crash.play()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
             game_close = False
             x1 = WIDTH / 2
             y1 = HEIGHT / 2
-            x1_change = 10
+            x1_change = 20
             y1_change = 0
             snake_List = []
             Length_of_snake = 1
             score_snake = 0
-            foodx = round(random.randrange(70, WIDTH - 70) / 10.0) * 10.0
-            foody = round(random.randrange(70, HEIGHT - 70) / 10.0) * 10.0
+            foodx = round(random.randrange(70, WIDTH - 70) / 20.0) * 20.0
+            foody = round(random.randrange(70, HEIGHT - 70) / 20.0) * 20.0
             screen.fill(BLACK)
             pygame.display.flip()
             return
-
+        
 # Liste des jeux
-jeux = [Calcul_mental, Jeu_Des_Fleches, Snake]
+jeux = [Calcul_mental, Jeu_Des_Fleches, Snake, Memory]
 
 global switch_time, start_time, score_switch
 
@@ -634,7 +650,7 @@ player_y = HEIGHT // 2
 arrow_count = 0
 x1 = WIDTH / 2
 y1 = HEIGHT / 2
-x1_change = 10
+x1_change = 20
 y1_change = 0
 snake_List = []
 Length_of_snake = 1
@@ -642,8 +658,8 @@ score_snake = 0
 score_calcul = 0
 score_fleche = 0
 score_memory = 0
-foodx = round(random.randrange(70, WIDTH - 70) / 10.0) * 10.0
-foody = round(random.randrange(70, HEIGHT - 70) / 10.0) * 10.0
+foodx = round(random.randrange(70, WIDTH - 70) / 20.0) * 20.0
+foody = round(random.randrange(70, HEIGHT - 70) / 20.0) * 20.0
 question=""
 answer=""
 score_calcul=0
@@ -655,8 +671,26 @@ clock = pygame.time.Clock()
 clock.tick(60)
 
 init_score()
-volume = 0.5  # Valeur initiale du volume
-pygame.mixer.music.set_volume(volume)
+volume_music = 0.5
+volume_effet = 0.5
+pygame.mixer.music.set_volume(volume_music)
+crash=pygame.mixer.Sound("crash.mp3")
+crash.set_volume(volume_effet)
+button=pygame.mixer.Sound("Button.mp3")
+button.set_volume(volume_effet)
+validate=pygame.mixer.Sound("Validate.mp3")
+validate.set_volume(volume_effet)
+teleport=pygame.mixer.Sound("teleport.mp3")
+teleport.set_volume(volume_effet)
+ding=pygame.mixer.Sound("Ding.mp3")
+ding.set_volume(volume_effet)
+wrong=pygame.mixer.Sound("Wrong.mp3")
+wrong.set_volume(volume_effet)
+pomme=pygame.mixer.Sound("Pomme.mp3")
+pomme.set_volume(volume_effet)
+perdu=pygame.mixer.Sound("pin ouin ouin ouinnnnn.mp3")
+perdu.set_volume(volume_effet)
+
 pygame.mixer.music.stop()
 pygame.mixer.music.load('switchitup.mp3')
 pygame.mixer.music.play(-1)
@@ -667,6 +701,7 @@ while True:
     elif menu_choice == 1:
         # Si le choix est 1, lancez le jeu
         if next_game:
+            teleport.play()
             new_game = random.choice(jeux)
             while current_game == new_game:
                 new_game = random.choice(jeux)
@@ -685,7 +720,7 @@ while True:
         if time.time() - start_time >= switch_time:
             next_game=True  # Reset the current game
         if nb_switch <= 0:
-            pygame.mixer.Sound("crash.mp3").play()
+            perdu.play()
             pygame.mixer.music.stop()
             pygame.mixer.music.load('game over.mp3')
             pygame.mixer.music.play(-1)
@@ -745,7 +780,7 @@ while True:
                     pygame.quit()
                     sys.exit()
                 if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
-                    score_switch =0
+                    score_switch = 0
                     current_game = None
                     next_game=True
                     new_game=None
@@ -757,7 +792,7 @@ while True:
                     arrow_count = 0
                     x1 = WIDTH / 2
                     y1 = HEIGHT / 2
-                    x1_change = 10
+                    x1_change = 20
                     y1_change = 0
                     snake_List = []
                     Length_of_snake = 1
@@ -765,8 +800,8 @@ while True:
                     score_calcul = 0
                     score_fleche = 0
                     score_memory = 0
-                    foodx = round(random.randrange(70, WIDTH - 70) / 10.0) * 10.0
-                    foody = round(random.randrange(70, HEIGHT - 70) / 10.0) * 10.0
+                    foodx = round(random.randrange(70, WIDTH - 70) / 20.0) * 20.0
+                    foody = round(random.randrange(70, HEIGHT - 70) / 20.0) * 20.0
                     question=""
                     answer=""
                     score_calcul=0
@@ -799,8 +834,8 @@ while True:
         # Modification de la ligne spécifiée
         for i, score in enumerate(highscore):
             if int(score[1])!=-1:
-                draw_text(f"{i+1}: {score[0]} => {int(score[1])}", pygame.font.Font(None, 60), BLACK, screen, WIDTH//2-198 , (102+50*i))
-                draw_text(f"{i+1}: {score[0]} => {int(score[1])}", pygame.font.Font(None, 60), WHITE, screen, WIDTH//2-200 , (100+50*i))
+                draw_text(f"{i+1}: {score[0]} -> {int(score[1])}", pygame.font.Font(None, 60), BLACK, screen, WIDTH//2-198 , (102+50*i))
+                draw_text(f"{i+1}: {score[0]} -> {int(score[1])}", pygame.font.Font(None, 60), WHITE, screen, WIDTH//2-200 , (100+50*i))
             else:
                 draw_text(f"{i+1}: No score", pygame.font.Font(None, 60), BLACK, screen, WIDTH//2-198 , (102+50*i))
                 draw_text(f"{i+1}: No score", pygame.font.Font(None, 60), WHITE, screen, WIDTH//2-200 , (100+50*i))
@@ -813,6 +848,7 @@ while True:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
                     if return_button.collidepoint(mouse_pos):
+                        button.play()
                         highscore_window_open = False
                         menu_choice=0
 
@@ -820,39 +856,56 @@ while True:
         screen.fill(WHITE)
         screen.blit(image_fond, (0, 0))
         parametre_window_open = True
-        dragging = False  # Indique si le curseur est en train d'être déplacé
-        draw_text("Parametre", FONT_TITRE, BLACK, screen, WIDTH//2 - 163, HEIGHT//2 - 238)
-        draw_text("Parametre", FONT_TITRE, WHITE, screen, WIDTH//2 - 165, HEIGHT//2 - 240)
-        draw_text("Volume", FONT, BLACK, screen, 198, 208)
-        draw_text("Volume", FONT, WHITE, screen, 200, 210)
+        dragging1 = False
+        dragging2 = False
+        draw_text("Parametres", FONT_TITRE, BLACK, screen, WIDTH//2 - 188, HEIGHT//2 - 238)
+        draw_text("Parametres", FONT_TITRE, WHITE, screen, WIDTH//2 - 190, HEIGHT//2 - 240)
+        draw_text("Volume musique", FONT, BLACK, screen, 200, 170)
+        draw_text("Volume musique", FONT, WHITE, screen, 198, 168)
+        draw_text("Volume effet sonore", FONT, BLACK, screen, 200, 270)
+        draw_text("Volume effet sonore", FONT, WHITE, screen, 198, 268)
 
         # Dessiner le bouton "Retour"
         return_button=pygame.draw.rect(screen, GRAY, (20, 40, 118, 30))
         draw_text("Retour", FONT, BLACK, screen, 25, 40)
 
         while parametre_window_open:
-            pygame.mixer.music.set_volume(volume)
+            pygame.mixer.music.set_volume(volume_music)
+            crash.set_volume(volume_effet)
+            button.set_volume(volume_effet)
+            validate.set_volume(volume_effet)
+            teleport.set_volume(volume_effet)
+            ding.set_volume(volume_effet)
+            wrong.set_volume(volume_effet)
+            pomme.set_volume(volume_effet)
+            perdu.set_volume(volume_effet)
             pygame.display.flip()
-            # Définir les dimensions de la barre de volume
+            # Définir les dimensions des barres de volume
             volume_bar_width = 300
             volume_bar_height = 40
             volume_bar_x = 200
-            volume_bar_y = 250
+            volume_bar_y1 = 210
+            volume_bar_y2 = 310
 
             # Définir la couleur de la barre de volume et du curseur
-            volume_bar_color = (100, 100, 100)
-            volume_cursor_color = (200, 0, 0)
+            volume_bar_color = GRAY
+            volume_cursor_color = RED
 
-            # Dessiner la barre de volume
-            pygame.draw.rect(screen, volume_bar_color, (volume_bar_x, volume_bar_y, volume_bar_width, volume_bar_height), border_radius=20)
+            # Dessiner les barres de volume
+            pygame.draw.rect(screen, volume_bar_color, (volume_bar_x, volume_bar_y1, volume_bar_width, volume_bar_height), border_radius=20)
+            volume_cursor_x1 = volume_bar_x + int(volume_music * volume_bar_width)
+            draw_text(f"{int(volume_music * 100)}%", FONT, BLACK, screen, volume_bar_x + volume_bar_width + 52, volume_bar_y1 + volume_bar_height // 2 - 13)
+            draw_text(f"{int(volume_music * 100)}%", FONT, WHITE, screen, volume_bar_x + volume_bar_width + 50, volume_bar_y1 + volume_bar_height // 2 - 15)
+            pygame.draw.circle(screen, volume_cursor_color, (volume_cursor_x1, volume_bar_y1 + volume_bar_height // 2), 20)
 
-            # Calculer la position du curseur en fonction du volume
-            volume_cursor_x = volume_bar_x + int(volume * volume_bar_width)
-            pygame.draw.circle(screen, volume_cursor_color, (volume_cursor_x, volume_bar_y + volume_bar_height // 2), 20)
+            pygame.draw.rect(screen, volume_bar_color, (volume_bar_x, volume_bar_y2, volume_bar_width, volume_bar_height), border_radius=20)
+            volume_cursor_x2 = volume_bar_x + int(volume_effet * volume_bar_width)
+            draw_text(f"{int(volume_effet * 100)}%", FONT, BLACK, screen, volume_bar_x + volume_bar_width + 52, volume_bar_y2 + volume_bar_height // 2 - 13)
+            draw_text(f"{int(volume_effet * 100)}%", FONT, WHITE, screen, volume_bar_x + volume_bar_width + 50, volume_bar_y2 + volume_bar_height // 2 - 15)
+            pygame.draw.circle(screen, volume_cursor_color, (volume_cursor_x2, volume_bar_y2 + volume_bar_height // 2), 20)
+
             pygame.display.update()
 
-            draw_text(f"{int(volume * 100)}%", FONT, BLACK, screen, volume_bar_x + volume_bar_width + 52, volume_bar_y + volume_bar_height // 2 - 13)
-            draw_text(f"{int(volume * 100)}%", FONT, WHITE, screen, volume_bar_x + volume_bar_width + 50, volume_bar_y + volume_bar_height // 2 - 15)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -860,28 +913,62 @@ while True:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
                     if return_button.collidepoint(mouse_pos):
+                        button.play()
                         parametre_window_open=False
                         menu_choice=0
-                    if volume_cursor_x - 20 <= mouse_pos[0] <= volume_cursor_x + 20 and volume_bar_y <= mouse_pos[1] <= volume_bar_y + volume_bar_height:
-                        dragging = True
+                    if volume_cursor_x1 - 20 <= mouse_pos[0] <= volume_cursor_x1 + 20 and volume_bar_y1 <= mouse_pos[1] <= volume_bar_y1 + volume_bar_height:
+                        dragging1 = True
+                    if volume_cursor_x2 - 20 <= mouse_pos[0] <= volume_cursor_x2 + 20 and volume_bar_y2 <= mouse_pos[1] <= volume_bar_y2 + volume_bar_height:
+                        dragging2 = True
                 if event.type == pygame.MOUSEBUTTONUP:
-                    if dragging:
-                        dragging = False
+                    if dragging1:
+                        dragging1 = False
+                    elif dragging2:
+                        dragging2 = False
                 if event.type == pygame.MOUSEMOTION:
-                    if dragging:
+                    if dragging1:
                         mouse_pos = pygame.mouse.get_pos()
-                        volume = (mouse_pos[0] - volume_bar_x) / volume_bar_width
-                        volume = max(0, min(1, volume))
+                        volume_music = (mouse_pos[0] - volume_bar_x) / volume_bar_width
+                        volume_music = max(0, min(1, volume_music))
                         screen.fill(WHITE)
                         screen.blit(image_fond, (0, 0))
-                        pygame.draw.rect(screen, volume_bar_color, (volume_bar_x, volume_bar_y, volume_bar_width, volume_bar_height), border_radius=20)
-                        draw_text(f"{int(volume * 100)}%", FONT, BLACK, screen, volume_bar_x + volume_bar_width + 52, volume_bar_y + volume_bar_height // 2 - 13)
-                        draw_text(f"{int(volume * 100)}%", FONT, WHITE, screen, volume_bar_x + volume_bar_width + 50, volume_bar_y + volume_bar_height // 2 - 15)
-                        pygame.draw.circle(screen, volume_cursor_color, (volume_cursor_x, volume_bar_y + volume_bar_height // 2), 20)
-                        draw_text("Parametre", FONT_TITRE, BLACK, screen, WIDTH//2 - 163, HEIGHT//2 - 238)
-                        draw_text("Parametre", FONT_TITRE, WHITE, screen, WIDTH//2 - 165, HEIGHT//2 - 240)
-                        draw_text("Volume", FONT, BLACK, screen, 198, 208)
-                        draw_text("Volume", FONT, WHITE, screen, 200, 210)
+                        pygame.draw.rect(screen, volume_bar_color, (volume_bar_x, volume_bar_y1, volume_bar_width, volume_bar_height), border_radius=20)
+                        draw_text(f"{int(volume_music * 100)}%", FONT, BLACK, screen, volume_bar_x + volume_bar_width + 52, volume_bar_y1 + volume_bar_height // 2 - 13)
+                        draw_text(f"{int(volume_music * 100)}%", FONT, WHITE, screen, volume_bar_x + volume_bar_width + 50, volume_bar_y1 + volume_bar_height // 2 - 15)
+                        pygame.draw.circle(screen, volume_cursor_color, (volume_cursor_x1, volume_bar_y1 + volume_bar_height // 2), 20)
+                        pygame.draw.rect(screen, volume_bar_color, (volume_bar_x, volume_bar_y2, volume_bar_width, volume_bar_height), border_radius=20)
+                        draw_text(f"{int(volume_effet * 100)}%", FONT, BLACK, screen, volume_bar_x + volume_bar_width + 52, volume_bar_y2 + volume_bar_height // 2 - 13)
+                        draw_text(f"{int(volume_effet * 100)}%", FONT, WHITE, screen, volume_bar_x + volume_bar_width + 50, volume_bar_y2 + volume_bar_height // 2 - 15)
+                        pygame.draw.circle(screen, volume_cursor_color, (volume_cursor_x2, volume_bar_y2 + volume_bar_height // 2), 20)
+                        draw_text("Parametres", FONT_TITRE, BLACK, screen, WIDTH//2 - 188, HEIGHT//2 - 238)
+                        draw_text("Parametres", FONT_TITRE, WHITE, screen, WIDTH//2 - 190, HEIGHT//2 - 240)
+                        draw_text("Volume musique", FONT, BLACK, screen, 200, 170)
+                        draw_text("Volume musique", FONT, WHITE, screen, 198, 168)
+                        draw_text("Volume effet sonore", FONT, BLACK, screen, 200, 270)
+                        draw_text("Volume effet sonore", FONT, WHITE, screen, 198, 268)
                         return_button=pygame.draw.rect(screen, GRAY, (20, 40, 118, 30))
                         draw_text("Retour", FONT, BLACK, screen, 25, 40)
+                    elif dragging2:
+                        mouse_pos = pygame.mouse.get_pos()
+                        volume_effet = (mouse_pos[0] - volume_bar_x) / volume_bar_width
+                        volume_effet = max(0, min(1, volume_effet))
+                        screen.fill(WHITE)
+                        screen.blit(image_fond, (0, 0))
+                        pygame.draw.rect(screen, volume_bar_color, (volume_bar_x, volume_bar_y1, volume_bar_width, volume_bar_height), border_radius=20)
+                        draw_text(f"{int(volume_music * 100)}%", FONT, BLACK, screen, volume_bar_x + volume_bar_width + 52, volume_bar_y1 + volume_bar_height // 2 - 13)
+                        draw_text(f"{int(volume_music * 100)}%", FONT, WHITE, screen, volume_bar_x + volume_bar_width + 50, volume_bar_y1 + volume_bar_height // 2 - 15)
+                        pygame.draw.circle(screen, volume_cursor_color, (volume_cursor_x1, volume_bar_y1 + volume_bar_height // 2), 20)
+                        pygame.draw.rect(screen, volume_bar_color, (volume_bar_x, volume_bar_y2, volume_bar_width, volume_bar_height), border_radius=20)
+                        draw_text(f"{int(volume_effet * 100)}%", FONT, BLACK, screen, volume_bar_x + volume_bar_width + 52, volume_bar_y2 + volume_bar_height // 2 - 13)
+                        draw_text(f"{int(volume_effet * 100)}%", FONT, WHITE, screen, volume_bar_x + volume_bar_width + 50, volume_bar_y2 + volume_bar_height // 2 - 15)
+                        pygame.draw.circle(screen, volume_cursor_color, (volume_cursor_x2, volume_bar_y2 + volume_bar_height // 2), 20)
+                        draw_text("Parametres", FONT_TITRE, BLACK, screen, WIDTH//2 - 188, HEIGHT//2 - 238)
+                        draw_text("Parametres", FONT_TITRE, WHITE, screen, WIDTH//2 - 190, HEIGHT//2 - 240)
+                        draw_text("Volume musique", FONT, BLACK, screen, 200, 170)
+                        draw_text("Volume musique", FONT, WHITE, screen, 198, 168)
+                        draw_text("Volume effet sonore", FONT, BLACK, screen, 200, 270)
+                        draw_text("Volume effet sonore", FONT, WHITE, screen, 198, 268)
+                        return_button=pygame.draw.rect(screen, GRAY, (20, 40, 118, 30))
+                        draw_text("Retour", FONT, BLACK, screen, 25, 40)
+                        
 
