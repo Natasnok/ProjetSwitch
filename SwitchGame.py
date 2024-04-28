@@ -636,8 +636,6 @@ def Snake():
 # Liste des jeux
 jeux = [Calcul_mental, Jeu_Des_Fleches, Snake, Memory]
 
-global switch_time, start_time, score_switch
-
 score_switch = 0
 current_game = None
 next_game=True
@@ -707,6 +705,9 @@ while True:
                 new_game = random.choice(jeux)
             current_game = new_game
             next_game = False
+            scale_factor = (1 - score_switch / 10000) ** 2
+            new_time = 5 + 10 * scale_factor
+            switch_time = random.uniform(5,new_time)
             txt = "Next Game: " + (str(new_game)).split()[1]
             if "_" in txt:
                 txt = txt.replace("_", " ")
@@ -780,12 +781,11 @@ while True:
                     pygame.quit()
                     sys.exit()
                 if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                    games_over = False
+                    pygame.mixer.music.stop()
+                    pygame.mixer.music.load('switchitup.mp3')
+                    pygame.mixer.music.play(-1)            
                     score_switch = 0
-                    current_game = None
-                    next_game=True
-                    new_game=None
-                    start_time = 0 # Time in seconds before switching to a new game
-                    switch_time = random.randint(5,15)
                     arrows = []
                     player_x = WIDTH // 2
                     player_y = HEIGHT // 2
@@ -809,9 +809,6 @@ while True:
                     matched_tiles = []
                     numbers = []
                     games_over = False
-                    pygame.mixer.music.stop()
-                    pygame.mixer.music.load('switchitup.mp3')
-                    pygame.mixer.music.play(-1)
                     menu_choice=0
 
     elif menu_choice==2:
