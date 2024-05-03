@@ -10,7 +10,8 @@ import os
 pygame.init()
 
 # Set up the display
-WIDTH, HEIGHT = 800, 600
+WIDTH = 800
+HEIGHT = 600
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GRAY = (200, 200, 200)
@@ -18,35 +19,71 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (50, 153, 213)
 YELLOW = (255, 255, 0)
-FONT_SIZE = 48
-FONT = pygame.font.Font(None, FONT_SIZE)
+FONT = pygame.font.Font(None, 48)
 FONT_TITRE= pygame.font.Font(None, 100)
 
 # Create the game window
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("SwitchGame")
+logo=pygame.image.load(os.path.join(os.path.dirname(__file__), "logo.ico"))
+pygame.display.set_icon(logo)
 
-# Charger l'image de fond
-image_fond = pygame.image.load("switchgame.jpg")
-# Redimensionner l'image de fond à la taille de la fenêtre
+# Charger les images de fond
+image_fond = pygame.image.load(os.path.join(os.path.dirname(__file__), "switchgame.jpg"))
 image_fond = pygame.transform.scale(image_fond, (WIDTH, HEIGHT))
-
-# Charger l'image de fond
-game_over_fond = pygame.image.load("game over.jpg")
-# Redimensionner l'image de fond à la taille de la fenêtre
+game_over_fond = pygame.image.load(os.path.join(os.path.dirname(__file__), "game over.jpg"))
 game_over_fond = pygame.transform.scale(game_over_fond, (WIDTH, HEIGHT))
 
-# Variable pour stocker le choix du menu
+# Variables d'initialisation
 menu_choice = 0
+score_switch = 0
+current_game = None
+next_game=True
+new_game=None
+start_time = 0
+switch_time = random.randint(5,15)
+arrows = []
+player_x = WIDTH // 2
+player_y = HEIGHT // 2
+arrow_count = 0
+x1 = WIDTH / 2
+y1 = HEIGHT / 2
+x1_change = 20
+y1_change = 0
+snake_List = []
+Length_of_snake = 1
+score_snake = 0
+score_calcul = 0
+score_fleche = 0
+score_memory = 0
+foodx = round(random.randrange(70, WIDTH - 70) / 20.0) * 20.0
+foody = round(random.randrange(70, HEIGHT - 70) / 20.0) * 20.0
+question=""
+answer=""
+score_calcul=0
+selected_tiles = []
+matched_tiles = []
+numbers = []
+games_over = False
+clock = pygame.time.Clock()
+clock.tick(60)
 
+# Fonction de l'écran de titre
 def main_menu():
     global nb_switch, menu_choice
+
+    # Mettre l'image de fond
     screen.blit(image_fond, (0, 0))
     
     # Charger l'image du bouton "parametre"
-    parametre_img = pygame.image.load("parametre.png")
+    parametre_img = pygame.image.load(os.path.join(os.path.dirname(__file__),"parametre.png"))
     parametre_rect = parametre_img.get_rect()
     parametre_rect.bottomright = (WIDTH - 25, HEIGHT - 25)
+
+    # Charger l'image du bouton "credit"
+    credit_img = pygame.image.load(os.path.join(os.path.dirname(__file__),"star.png"))
+    credit_rect = parametre_img.get_rect()
+    credit_rect.bottomleft = (25, HEIGHT - 25)
     
     while True:
         draw_text("Switch Game", FONT_TITRE, BLACK, screen, WIDTH//2 - 215, HEIGHT//2 - 145)
@@ -54,21 +91,24 @@ def main_menu():
 
         # Dessiner le bouton "Start"
         start_button_rect = pygame.Rect(WIDTH//2 - 100, HEIGHT//2, 200, 50)
-        pygame.draw.rect(screen, GREEN, start_button_rect)
+        pygame.draw.rect(screen, GREEN, start_button_rect, border_radius=10)
         draw_text("Start", FONT, BLACK, screen, WIDTH//2 - 40, HEIGHT//2 + 10)
 
         # Dessiner le bouton "HighScore"
         highscore_button_rect = pygame.Rect(WIDTH//2 - 100, HEIGHT//2 + 100, 200, 50)
-        pygame.draw.rect(screen, YELLOW, highscore_button_rect)
+        pygame.draw.rect(screen, YELLOW, highscore_button_rect, border_radius=10)
         draw_text("HighScore", FONT, BLACK, screen, WIDTH//2 - 80, HEIGHT//2 + 110)
 
         # Dessiner le bouton "Quitter"
         quit_button_rect = pygame.Rect(WIDTH//2 - 100, HEIGHT//2 + 200, 200, 50)
-        pygame.draw.rect(screen, RED, quit_button_rect)
+        pygame.draw.rect(screen, RED, quit_button_rect, border_radius=10)
         draw_text("Quitter", FONT, BLACK, screen, WIDTH//2 - 60, HEIGHT//2 + 210)
 
         # Dessiner le bouton "parametre"
         screen.blit(parametre_img, parametre_rect)
+
+        # Dessiner le bouton "credit"
+        screen.blit(credit_img, credit_rect)
 
         pygame.display.update()
 
@@ -78,38 +118,44 @@ def main_menu():
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
-                # Vérifier si le bouton "Start" a été cliqué ...
+                # Vérifier si le bouton "Start" a été cliqué
                 if start_button_rect.collidepoint(mouse_pos):
-                    # Code pour le bouton "Start"
                     button.play()
                     pygame.mixer.music.stop()
-                    pygame.mixer.music.load('switchgame.mp3')
+                    pygame.mixer.music.load(os.path.join(os.path.dirname(__file__),'switchgame.mp3'))
                     pygame.mixer.music.play(-1)
                     nb_switch = 3
                     menu_choice = 1
                     return
-                # Vérifier si le bouton "HighScore" a été cliqué ...
+                # Vérifier si le bouton "HighScore" a été cliqué
                 elif highscore_button_rect.collidepoint(mouse_pos):
-                    # Code pour le bouton "HighScore"
                     button.play()
                     menu_choice = 2
                     return
-                # Vérifier si le bouton "Quitter" a été cliqué ...
+                # Vérifier si le bouton "Quitter" a été cliqué
                 elif quit_button_rect.collidepoint(mouse_pos):
                     button.play()
                     pygame.quit()
                     sys.exit()
                 # Vérifier si le bouton "parametre" a été cliqué
                 elif parametre_rect.collidepoint(mouse_pos):
-                    # Traitez ici le clic sur le bouton "parametre"
                     button.play()
                     menu_choice = 3
                     return
+                # Vérifier si le bouton "credit" a été cliqué
+                elif credit_rect.collidepoint(mouse_pos):
+                    button.play()
+                    menu_choice = 4
+                    return
 
+
+# Foncion d'initalisation des scores
 def init_score():
-    chemin=os.path.join(os.path.dirname(__file__), "highscore.csv")
-
-    if not os.path.exists(chemin):
+    global cheminscore
+    # Obtenir le répertoire contenant l'exécutable principal
+    repertoire = os.path.dirname(os.path.abspath(sys.argv[0]))
+    cheminscore = os.path.join(repertoire, "highscore.csv")
+    if not os.path.exists(cheminscore):
         # Exemple de données à enregistrer dans le fichier CSV
         donnees = [
         ["None", -1],
@@ -125,15 +171,13 @@ def init_score():
         ]
     
         # Création et écriture dans le fichier CSV
-        with open(chemin, 'w', newline='') as csvfile:
+        with open(cheminscore, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerows(donnees)
 
 def verif_score(new_score):
-    chemin=os.path.join(os.path.dirname(__file__), "highscore.csv")
-
     # Lecture du fichier CSV
-    with open(chemin, 'r') as csvfile:
+    with open(cheminscore, 'r') as csvfile:
         reader = csv.reader(csvfile)
         highscore = list(reader)
     
@@ -144,10 +188,8 @@ def verif_score(new_score):
     return False
 
 def actuali_score(new_score,name):
-    chemin=os.path.join(os.path.dirname(__file__), "highscore.csv")
-
     # Lecture du fichier CSV
-    with open(chemin, 'r') as csvfile:
+    with open(cheminscore, 'r') as csvfile:
         reader = csv.reader(csvfile)
         highscore = list(reader)
     
@@ -158,11 +200,30 @@ def actuali_score(new_score,name):
             highscore.pop()
     
             # Écriture dans le fichier CSV
-            with open(chemin, 'w', newline='') as csvfile:
+            with open(cheminscore, 'w', newline='') as csvfile:
                 writer = csv.writer(csvfile)
                 writer.writerows(highscore)
             return
     return
+
+def init_param():
+    global cheminparam
+    # Obtenir le répertoire contenant l'exécutable principal
+    repertoire_exe = os.path.dirname(os.path.abspath(sys.argv[0]))
+    cheminparam = os.path.join(repertoire_exe, "param.csv")
+    if not os.path.exists(cheminparam):
+        # Exemple de données à enregistrer dans le fichier CSV
+        donnees=[
+            [0.5],
+            [0.5],
+            ["False"],
+            ["azerty"]
+            ]
+    
+        # Création et écriture dans le fichier CSV
+        with open(cheminparam, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerows(donnees)
 
 def generate_question():
         num1 = random.randint(1, 20)
@@ -355,14 +416,24 @@ def Jeu_Des_Fleches():
         keys = pygame.key.get_pressed()
         new_player_x = player_x
         new_player_y = player_y
-        if keys[pygame.K_LEFT] or keys[pygame.K_q] or keys[pygame.K_a]:
-            new_player_x -= PLAYER_SPEED
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            new_player_x += PLAYER_SPEED
-        if keys[pygame.K_UP] or keys[pygame.K_z] or keys[pygame.K_w]:
-            new_player_y -= PLAYER_SPEED
-        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
-            new_player_y += PLAYER_SPEED
+        if keyboard=="azerty":
+            if keys[pygame.K_LEFT] or keys[pygame.K_q]:
+                new_player_x -= PLAYER_SPEED
+            if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+                new_player_x += PLAYER_SPEED
+            if keys[pygame.K_UP] or keys[pygame.K_z]:
+                new_player_y -= PLAYER_SPEED
+            if keys[pygame.K_DOWN] or keys[pygame.K_s]:
+                new_player_y += PLAYER_SPEED
+        else:
+            if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+                new_player_x -= PLAYER_SPEED
+            if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+                new_player_x += PLAYER_SPEED
+            if keys[pygame.K_UP] or keys[pygame.K_w]:
+                new_player_y -= PLAYER_SPEED
+            if keys[pygame.K_DOWN] or keys[pygame.K_s]:
+                new_player_y += PLAYER_SPEED
 
         # Vérifier si le nouveau positionnement du joueur est à l'intérieur du cercle
         if point_inside_circle(new_player_x, new_player_y):
@@ -426,10 +497,15 @@ def Memory():
     GAP_SIZE = 10
     ROWS = 4
     COLS = 4
-    pygame.display.flip()
+
+    # Calculate la position de départ pour centrer la grille
+    grid_width = COLS * TILE_SIZE + (COLS - 1) * GAP_SIZE
+    grid_height = ROWS * TILE_SIZE + (ROWS - 1) * GAP_SIZE
+    start_x = (WIDTH - grid_width) // 2
+    start_y = (HEIGHT - grid_height) // 2
 
     # Create numbers for tiles
-    if numbers==[]:
+    if numbers == []:
         numbers = list(range(1, 9)) * 2
         random.shuffle(numbers)
 
@@ -437,8 +513,8 @@ def Memory():
     tile_rects = []
     for row in range(ROWS):
         for col in range(COLS):
-            x = col * (TILE_SIZE + GAP_SIZE) + 100
-            y = row * (TILE_SIZE + GAP_SIZE) + 100
+            x = start_x + col * (TILE_SIZE + GAP_SIZE)
+            y = start_y + row * (TILE_SIZE + GAP_SIZE)
             tile_rects.append(pygame.Rect(x, y, TILE_SIZE, TILE_SIZE))
 
     # Game variables
@@ -485,8 +561,8 @@ def Memory():
             if numbers[index1] == numbers[index2]:
                 ding.play()
                 matched_tiles.extend(selected_tiles)
-                score_memory+=1
-                if score_memory==2:
+                score_memory += 1
+                if score_memory == 2:
                     validate.play()
                     nb_switch += 1
                     score_switch += 100
@@ -544,18 +620,32 @@ def Snake():
                     sys.exit()
  
             keys = pygame.key.get_pressed()
-            if (keys[pygame.K_LEFT] or keys[pygame.K_q] or keys[pygame.K_a]) and x1_change != snake_block:
-                x1_change = -snake_block
-                y1_change = 0
-            elif (keys[pygame.K_RIGHT] or keys[pygame.K_d]) and x1_change != -snake_block:
-                x1_change = snake_block
-                y1_change = 0
-            elif (keys[pygame.K_UP] or keys[pygame.K_z] or keys[pygame.K_w]) and y1_change != snake_block:
-                y1_change = -snake_block
-                x1_change = 0
-            elif (keys[pygame.K_DOWN] or keys[pygame.K_s]) and y1_change != -snake_block:
-                y1_change = snake_block
-                x1_change = 0
+            if keyboard=="azerty":
+                if (keys[pygame.K_LEFT] or keys[pygame.K_q]) and x1_change != snake_block:
+                    x1_change = -snake_block
+                    y1_change = 0
+                elif (keys[pygame.K_RIGHT] or keys[pygame.K_d]) and x1_change != -snake_block:
+                    x1_change = snake_block
+                    y1_change = 0
+                elif (keys[pygame.K_UP] or keys[pygame.K_z]) and y1_change != snake_block:
+                    y1_change = -snake_block
+                    x1_change = 0
+                elif (keys[pygame.K_DOWN] or keys[pygame.K_s]) and y1_change != -snake_block:
+                    y1_change = snake_block
+                    x1_change = 0
+            else:
+                if (keys[pygame.K_LEFT] or keys[pygame.K_a]) and x1_change != snake_block:
+                    x1_change = -snake_block
+                    y1_change = 0
+                elif (keys[pygame.K_RIGHT] or keys[pygame.K_d]) and x1_change != -snake_block:
+                    x1_change = snake_block
+                    y1_change = 0
+                elif (keys[pygame.K_UP] or keys[pygame.K_w]) and y1_change != snake_block:
+                    y1_change = -snake_block
+                    x1_change = 0
+                elif (keys[pygame.K_DOWN] or keys[pygame.K_s]) and y1_change != -snake_block:
+                    y1_change = snake_block
+                    x1_change = 0
  
             if x1 >= WIDTH - 60 or x1 < 60 or y1 >= HEIGHT - 60 or y1 < 60:
                 crash.play()
@@ -633,65 +723,42 @@ def Snake():
             pygame.display.flip()
             return
         
-# Liste des jeux
-jeux = [Calcul_mental, Jeu_Des_Fleches, Snake, Memory]
-
-score_switch = 0
-current_game = None
-next_game=True
-new_game=None
-start_time = 0 # Time in seconds before switching to a new game
-switch_time = random.randint(5,15)
-arrows = []
-player_x = WIDTH // 2
-player_y = HEIGHT // 2
-arrow_count = 0
-x1 = WIDTH / 2
-y1 = HEIGHT / 2
-x1_change = 20
-y1_change = 0
-snake_List = []
-Length_of_snake = 1
-score_snake = 0
-score_calcul = 0
-score_fleche = 0
-score_memory = 0
-foodx = round(random.randrange(70, WIDTH - 70) / 20.0) * 20.0
-foody = round(random.randrange(70, HEIGHT - 70) / 20.0) * 20.0
-question=""
-answer=""
-score_calcul=0
-selected_tiles = []
-matched_tiles = []
-numbers = []
-games_over = False
-clock = pygame.time.Clock()
-clock.tick(60)
-
 init_score()
-volume_music = 0.5
-volume_effet = 0.5
+init_param()
+
+with open(cheminparam, 'r') as csvfile:
+        reader = csv.reader(csvfile)
+        param = list(reader)
+volume_music = float(param[0][0])
+volume_effet = float(param[1][0])
+fullscreen = param[2][0]
+keyboard = param[3][0]
+if fullscreen=="True":
+    pygame.display.toggle_fullscreen()
+    
 pygame.mixer.music.set_volume(volume_music)
-crash=pygame.mixer.Sound("crash.mp3")
+crash=pygame.mixer.Sound(os.path.join(os.path.dirname(__file__),"crash.mp3"))
 crash.set_volume(volume_effet)
-button=pygame.mixer.Sound("Button.mp3")
+button=pygame.mixer.Sound(os.path.join(os.path.dirname(__file__),"Button.mp3"))
 button.set_volume(volume_effet)
-validate=pygame.mixer.Sound("Validate.mp3")
+validate=pygame.mixer.Sound(os.path.join(os.path.dirname(__file__),"Validate.mp3"))
 validate.set_volume(volume_effet)
-teleport=pygame.mixer.Sound("teleport.mp3")
+teleport=pygame.mixer.Sound(os.path.join(os.path.dirname(__file__),"teleport.mp3"))
 teleport.set_volume(volume_effet)
-ding=pygame.mixer.Sound("Ding.mp3")
+ding=pygame.mixer.Sound(os.path.join(os.path.dirname(__file__),"Ding.mp3"))
 ding.set_volume(volume_effet)
-wrong=pygame.mixer.Sound("Wrong.mp3")
+wrong=pygame.mixer.Sound(os.path.join(os.path.dirname(__file__),"Wrong.mp3"))
 wrong.set_volume(volume_effet)
-pomme=pygame.mixer.Sound("Pomme.mp3")
+pomme=pygame.mixer.Sound(os.path.join(os.path.dirname(__file__),"Pomme.mp3"))
 pomme.set_volume(volume_effet)
-perdu=pygame.mixer.Sound("pin ouin ouin ouinnnnn.mp3")
+perdu=pygame.mixer.Sound(os.path.join(os.path.dirname(__file__),"pin ouin ouin ouinnnnn.mp3"))
 perdu.set_volume(volume_effet)
 
 pygame.mixer.music.stop()
-pygame.mixer.music.load('switchitup.mp3')
+pygame.mixer.music.load(os.path.join(os.path.dirname(__file__),'switchitup.mp3'))
 pygame.mixer.music.play(-1)
+
+jeux = [Calcul_mental, Jeu_Des_Fleches, Snake, Memory]
 
 while True:
     if menu_choice == 0:
@@ -723,7 +790,7 @@ while True:
         if nb_switch <= 0:
             perdu.play()
             pygame.mixer.music.stop()
-            pygame.mixer.music.load('game over.mp3')
+            pygame.mixer.music.load(os.path.join(os.path.dirname(__file__),'game over.mp3'))
             pygame.mixer.music.play(-1)
             screen.fill(WHITE)
             screen.blit(game_over_fond, (0, 0))
@@ -783,7 +850,7 @@ while True:
                 if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
                     games_over = False
                     pygame.mixer.music.stop()
-                    pygame.mixer.music.load('switchitup.mp3')
+                    pygame.mixer.music.load(os.path.join(os.path.dirname(__file__),'switchitup.mp3'))
                     pygame.mixer.music.play(-1)            
                     score_switch = 0
                     arrows = []
@@ -817,12 +884,11 @@ while True:
         screen.blit(image_fond, (0, 0))
 
         # Dessiner le bouton "Retour"
-        return_button=pygame.draw.rect(screen, GRAY, (20, 40, 118, 30))
+        return_button=pygame.draw.rect(screen, GRAY, (20, 40, 118, 30), border_radius=20)
         draw_text("Retour", FONT, BLACK, screen, 25, 40)
 
-        chemin=os.path.join(os.path.dirname(__file__), "highscore.csv")
         # Lecture du fichier CSV
-        with open(chemin, 'r') as csvfile:
+        with open(cheminscore, 'r') as csvfile:
             reader = csv.reader(csvfile)
             highscore = list(reader)
     
@@ -861,12 +927,59 @@ while True:
         draw_text("Volume musique", FONT, WHITE, screen, 198, 168)
         draw_text("Volume effet sonore", FONT, BLACK, screen, 200, 270)
         draw_text("Volume effet sonore", FONT, WHITE, screen, 198, 268)
+        draw_text("Screen size", FONT, BLACK, screen, 200, 370)
+        draw_text("Screen size", FONT, WHITE, screen, 198, 368)
+        draw_text("Keyboard", FONT, BLACK, screen, 200, 470)
+        draw_text("Keyboard", FONT, WHITE, screen, 198, 468)
 
         # Dessiner le bouton "Retour"
-        return_button=pygame.draw.rect(screen, GRAY, (20, 40, 118, 30))
+        return_button=pygame.draw.rect(screen, GRAY, (20, 40, 118, 30), border_radius=20)
         draw_text("Retour", FONT, BLACK, screen, 25, 40)
 
+        # Dessiner le bouton "Screen"
+        window_button=pygame.draw.rect(screen, GRAY, (250, 410, 300, 50), border_radius=20)
+        pygame.draw.rect(screen, BLACK, (500, 422, 25, 25))
+        draw_text("FullScreen", FONT, BLACK, screen, 300, 420)
+        ok_img = pygame.image.load(os.path.join(os.path.dirname(__file__),"ok.png"))
+        ok_rect = ok_img.get_rect()
+        ok_rect.bottomright = (546,452)
+        if fullscreen=="True":
+                screen.blit(ok_img, ok_rect)
+
         while parametre_window_open:
+            
+            def param_maj():
+                global return_button, window_button
+                screen.fill(WHITE)
+                screen.blit(image_fond, (0, 0))
+                pygame.draw.rect(screen, volume_bar_color, (volume_bar_x, volume_bar_y1, volume_bar_width, volume_bar_height), border_radius=20)
+                draw_text(f"{int(volume_music * 100)}%", FONT, BLACK, screen, volume_bar_x + volume_bar_width + 25, volume_bar_y1 + volume_bar_height // 2 - 13)
+                draw_text(f"{int(volume_music * 100)}%", FONT, WHITE, screen, volume_bar_x + volume_bar_width + 23, volume_bar_y1 + volume_bar_height // 2 - 15)
+                pygame.draw.circle(screen, volume_cursor_color, (volume_cursor_x1, volume_bar_y1 + volume_bar_height // 2), 20)
+                pygame.draw.rect(screen, volume_bar_color, (volume_bar_x, volume_bar_y2, volume_bar_width, volume_bar_height), border_radius=20)
+                draw_text(f"{int(volume_effet * 100)}%", FONT, BLACK, screen, volume_bar_x + volume_bar_width + 25, volume_bar_y2 + volume_bar_height // 2 - 13)
+                draw_text(f"{int(volume_effet * 100)}%", FONT, WHITE, screen, volume_bar_x + volume_bar_width + 23, volume_bar_y2 + volume_bar_height // 2 - 15)
+                pygame.draw.circle(screen, volume_cursor_color, (volume_cursor_x2, volume_bar_y2 + volume_bar_height // 2), 20)
+                draw_text("Parametres", FONT_TITRE, BLACK, screen, WIDTH//2 - 188, HEIGHT//2 - 238)
+                draw_text("Parametres", FONT_TITRE, WHITE, screen, WIDTH//2 - 190, HEIGHT//2 - 240)
+                draw_text("Volume musique", FONT, BLACK, screen, 200, 170)
+                draw_text("Volume musique", FONT, WHITE, screen, 198, 168)
+                draw_text("Volume effet sonore", FONT, BLACK, screen, 200, 270)
+                draw_text("Volume effet sonore", FONT, WHITE, screen, 198, 268)
+                draw_text("Screen size", FONT, BLACK, screen, 200, 370)
+                draw_text("Screen size", FONT, WHITE, screen, 198, 368)
+                return_button=pygame.draw.rect(screen, GRAY, (20, 40, 118, 30), border_radius=20)
+                draw_text("Retour", FONT, BLACK, screen, 25, 40)
+                window_button=pygame.draw.rect(screen, GRAY, (250, 410, 300, 50), border_radius=20)
+                pygame.draw.rect(screen, BLACK, (500, 422, 25, 25))
+                draw_text("FullScreen", FONT, BLACK, screen, 300, 420)
+                if fullscreen=="True":
+                    screen.blit(ok_img, ok_rect)
+                draw_text("Keyboard", FONT, BLACK, screen, 200, 470)
+                draw_text("Keyboard", FONT, WHITE, screen, 198, 468)
+                keyboard_button=pygame.draw.rect(screen, GRAY, (250, 510, 300, 50), border_radius=20)
+                draw_text(f"{keyboard}", FONT, BLACK, screen, 340, 520)
+
             pygame.mixer.music.set_volume(volume_music)
             crash.set_volume(volume_effet)
             button.set_volume(volume_effet)
@@ -876,11 +989,14 @@ while True:
             wrong.set_volume(volume_effet)
             pomme.set_volume(volume_effet)
             perdu.set_volume(volume_effet)
+            with open(cheminparam, 'w', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerows([[volume_music],[volume_effet],[fullscreen],[keyboard]])
             pygame.display.flip()
             # Définir les dimensions des barres de volume
             volume_bar_width = 300
             volume_bar_height = 40
-            volume_bar_x = 200
+            volume_bar_x = 250
             volume_bar_y1 = 210
             volume_bar_y2 = 310
 
@@ -891,16 +1007,21 @@ while True:
             # Dessiner les barres de volume
             pygame.draw.rect(screen, volume_bar_color, (volume_bar_x, volume_bar_y1, volume_bar_width, volume_bar_height), border_radius=20)
             volume_cursor_x1 = volume_bar_x + int(volume_music * volume_bar_width)
-            draw_text(f"{int(volume_music * 100)}%", FONT, BLACK, screen, volume_bar_x + volume_bar_width + 52, volume_bar_y1 + volume_bar_height // 2 - 13)
-            draw_text(f"{int(volume_music * 100)}%", FONT, WHITE, screen, volume_bar_x + volume_bar_width + 50, volume_bar_y1 + volume_bar_height // 2 - 15)
+            draw_text(f"{int(volume_music * 100)}%", FONT, BLACK, screen, volume_bar_x + volume_bar_width + 25, volume_bar_y1 + volume_bar_height // 2 - 13)
+            draw_text(f"{int(volume_music * 100)}%", FONT, WHITE, screen, volume_bar_x + volume_bar_width + 23, volume_bar_y1 + volume_bar_height // 2 - 15)
             pygame.draw.circle(screen, volume_cursor_color, (volume_cursor_x1, volume_bar_y1 + volume_bar_height // 2), 20)
 
             pygame.draw.rect(screen, volume_bar_color, (volume_bar_x, volume_bar_y2, volume_bar_width, volume_bar_height), border_radius=20)
             volume_cursor_x2 = volume_bar_x + int(volume_effet * volume_bar_width)
-            draw_text(f"{int(volume_effet * 100)}%", FONT, BLACK, screen, volume_bar_x + volume_bar_width + 52, volume_bar_y2 + volume_bar_height // 2 - 13)
-            draw_text(f"{int(volume_effet * 100)}%", FONT, WHITE, screen, volume_bar_x + volume_bar_width + 50, volume_bar_y2 + volume_bar_height // 2 - 15)
+            draw_text(f"{int(volume_effet * 100)}%", FONT, BLACK, screen, volume_bar_x + volume_bar_width + 25, volume_bar_y2 + volume_bar_height // 2 - 13)
+            draw_text(f"{int(volume_effet * 100)}%", FONT, WHITE, screen, volume_bar_x + volume_bar_width + 23, volume_bar_y2 + volume_bar_height // 2 - 15)
             pygame.draw.circle(screen, volume_cursor_color, (volume_cursor_x2, volume_bar_y2 + volume_bar_height // 2), 20)
 
+            keyboard_button=pygame.draw.rect(screen, GRAY, (250, 510, 300, 50), border_radius=20)
+            draw_text(f"{keyboard}", FONT, BLACK, screen, 340, 520)
+
+            param_maj()
+            
             pygame.display.update()
 
             for event in pygame.event.get():
@@ -913,6 +1034,19 @@ while True:
                         button.play()
                         parametre_window_open=False
                         menu_choice=0
+                    if window_button.collidepoint(mouse_pos):
+                        button.play()
+                        if fullscreen=="False":
+                            fullscreen="True"
+                        else:
+                            fullscreen="False"
+                        pygame.display.toggle_fullscreen()
+                    if keyboard_button.collidepoint(mouse_pos):
+                        button.play()
+                        if keyboard=="azerty":
+                            keyboard="qwerty"
+                        else:
+                            keyboard="azerty"
                     if volume_cursor_x1 - 20 <= mouse_pos[0] <= volume_cursor_x1 + 20 and volume_bar_y1 <= mouse_pos[1] <= volume_bar_y1 + volume_bar_height:
                         dragging1 = True
                     if volume_cursor_x2 - 20 <= mouse_pos[0] <= volume_cursor_x2 + 20 and volume_bar_y2 <= mouse_pos[1] <= volume_bar_y2 + volume_bar_height:
@@ -927,45 +1061,43 @@ while True:
                         mouse_pos = pygame.mouse.get_pos()
                         volume_music = (mouse_pos[0] - volume_bar_x) / volume_bar_width
                         volume_music = max(0, min(1, volume_music))
-                        screen.fill(WHITE)
-                        screen.blit(image_fond, (0, 0))
-                        pygame.draw.rect(screen, volume_bar_color, (volume_bar_x, volume_bar_y1, volume_bar_width, volume_bar_height), border_radius=20)
-                        draw_text(f"{int(volume_music * 100)}%", FONT, BLACK, screen, volume_bar_x + volume_bar_width + 52, volume_bar_y1 + volume_bar_height // 2 - 13)
-                        draw_text(f"{int(volume_music * 100)}%", FONT, WHITE, screen, volume_bar_x + volume_bar_width + 50, volume_bar_y1 + volume_bar_height // 2 - 15)
-                        pygame.draw.circle(screen, volume_cursor_color, (volume_cursor_x1, volume_bar_y1 + volume_bar_height // 2), 20)
-                        pygame.draw.rect(screen, volume_bar_color, (volume_bar_x, volume_bar_y2, volume_bar_width, volume_bar_height), border_radius=20)
-                        draw_text(f"{int(volume_effet * 100)}%", FONT, BLACK, screen, volume_bar_x + volume_bar_width + 52, volume_bar_y2 + volume_bar_height // 2 - 13)
-                        draw_text(f"{int(volume_effet * 100)}%", FONT, WHITE, screen, volume_bar_x + volume_bar_width + 50, volume_bar_y2 + volume_bar_height // 2 - 15)
-                        pygame.draw.circle(screen, volume_cursor_color, (volume_cursor_x2, volume_bar_y2 + volume_bar_height // 2), 20)
-                        draw_text("Parametres", FONT_TITRE, BLACK, screen, WIDTH//2 - 188, HEIGHT//2 - 238)
-                        draw_text("Parametres", FONT_TITRE, WHITE, screen, WIDTH//2 - 190, HEIGHT//2 - 240)
-                        draw_text("Volume musique", FONT, BLACK, screen, 200, 170)
-                        draw_text("Volume musique", FONT, WHITE, screen, 198, 168)
-                        draw_text("Volume effet sonore", FONT, BLACK, screen, 200, 270)
-                        draw_text("Volume effet sonore", FONT, WHITE, screen, 198, 268)
-                        return_button=pygame.draw.rect(screen, GRAY, (20, 40, 118, 30))
-                        draw_text("Retour", FONT, BLACK, screen, 25, 40)
                     elif dragging2:
                         mouse_pos = pygame.mouse.get_pos()
                         volume_effet = (mouse_pos[0] - volume_bar_x) / volume_bar_width
                         volume_effet = max(0, min(1, volume_effet))
-                        screen.fill(WHITE)
-                        screen.blit(image_fond, (0, 0))
-                        pygame.draw.rect(screen, volume_bar_color, (volume_bar_x, volume_bar_y1, volume_bar_width, volume_bar_height), border_radius=20)
-                        draw_text(f"{int(volume_music * 100)}%", FONT, BLACK, screen, volume_bar_x + volume_bar_width + 52, volume_bar_y1 + volume_bar_height // 2 - 13)
-                        draw_text(f"{int(volume_music * 100)}%", FONT, WHITE, screen, volume_bar_x + volume_bar_width + 50, volume_bar_y1 + volume_bar_height // 2 - 15)
-                        pygame.draw.circle(screen, volume_cursor_color, (volume_cursor_x1, volume_bar_y1 + volume_bar_height // 2), 20)
-                        pygame.draw.rect(screen, volume_bar_color, (volume_bar_x, volume_bar_y2, volume_bar_width, volume_bar_height), border_radius=20)
-                        draw_text(f"{int(volume_effet * 100)}%", FONT, BLACK, screen, volume_bar_x + volume_bar_width + 52, volume_bar_y2 + volume_bar_height // 2 - 13)
-                        draw_text(f"{int(volume_effet * 100)}%", FONT, WHITE, screen, volume_bar_x + volume_bar_width + 50, volume_bar_y2 + volume_bar_height // 2 - 15)
-                        pygame.draw.circle(screen, volume_cursor_color, (volume_cursor_x2, volume_bar_y2 + volume_bar_height // 2), 20)
-                        draw_text("Parametres", FONT_TITRE, BLACK, screen, WIDTH//2 - 188, HEIGHT//2 - 238)
-                        draw_text("Parametres", FONT_TITRE, WHITE, screen, WIDTH//2 - 190, HEIGHT//2 - 240)
-                        draw_text("Volume musique", FONT, BLACK, screen, 200, 170)
-                        draw_text("Volume musique", FONT, WHITE, screen, 198, 168)
-                        draw_text("Volume effet sonore", FONT, BLACK, screen, 200, 270)
-                        draw_text("Volume effet sonore", FONT, WHITE, screen, 198, 268)
-                        return_button=pygame.draw.rect(screen, GRAY, (20, 40, 118, 30))
-                        draw_text("Retour", FONT, BLACK, screen, 25, 40)
-                        
+    elif menu_choice==4:
+        screen.fill(WHITE)
+        screen.blit(image_fond, (0, 0))
+        credit_window_open = True
 
+        draw_text("Crédits", FONT_TITRE, BLACK, screen, WIDTH//2 - 118, HEIGHT//2 - 238)
+        draw_text("Crédits", FONT_TITRE, WHITE, screen, WIDTH//2 - 120, HEIGHT//2 - 240)
+        draw_text("Développement et Conception:", FONT, BLACK, screen, 50, 180)
+        draw_text("Développement et Conception:", FONT, WHITE, screen, 48, 178)
+        draw_text("• Charly Leclerc", FONT, BLACK, screen, 65, 230)
+        draw_text("• Charly Leclerc", FONT, WHITE, screen, 63, 228)
+        draw_text("• Mael Torset", FONT, BLACK, screen, 65, 270)
+        draw_text("• Mael Torset", FONT, WHITE, screen, 63, 268)
+        draw_text("• Lucas Aguilar", FONT, BLACK, screen, 65, 310)
+        draw_text("• Lucas Aguilar", FONT, WHITE, screen, 63, 308)
+        draw_text("• Lucas Thomas", FONT, BLACK, screen, 65, 350)
+        draw_text("• Lucas Thomas", FONT, WHITE, screen, 63, 348)
+        draw_text("Musique Générée par Suno AI", FONT, BLACK, screen, 300, 470)
+        draw_text("Musique Générée par Suno AI", FONT, WHITE, screen, 298, 468)
+        
+        # Dessiner le bouton "Retour"
+        return_button=pygame.draw.rect(screen, GRAY, (20, 40, 118, 30), border_radius=20)
+        draw_text("Retour", FONT, BLACK, screen, 25, 40)
+
+        while credit_window_open:
+            pygame.display.update()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_pos = pygame.mouse.get_pos()
+                    if return_button.collidepoint(mouse_pos):
+                        button.play()
+                        credit_window_open=False
+                        menu_choice=0
